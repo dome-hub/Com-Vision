@@ -4,7 +4,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 
-
+#ทำหน้าที่แปลงภาพสีให้เป็นภาพไบนารี โดยผ่านการแปลงเป็นสีเทา
 def binarize_image(image, threshold=150):
     grayscale_image = image.convert('L')   # แปลงภาพเป็นสีเทา (Grayscale)
     gray_array = np.array(grayscale_image)  # แปลงภาพสีเทาเป็น Array ของ numpy
@@ -18,7 +18,8 @@ def binarize_image(image, threshold=150):
     binary_image = Image.fromarray(binary_array.astype(np.uint8) * 255)# คูณ 255 เพื่อให้ภาพเป็นขาวดำ
     return binary_image # ส่งกลับภาพไบนารี
 
-
+#คำนวณ Vertical Projection ให้ข้อมูลว่ามีพิกเซลสีดำอยู่ในแต่ละคอลัมน์เท่าไหร่
+# 
 def vertical_projection(binary_image):
     # แปลงภาพไบนารีเป็น Array ของ numpy
     img_array = np.array(binary_image) 
@@ -45,6 +46,10 @@ def segment_characters_modified(projection, min_width=5, threshold=5):
                 segments.append((start_index, end_index)) # เก็บช่วงใน list segments
     return segments # ส่งกลับ list ของขอบเขตตัวอักษร
 
+#ค่า min_width ใช้กรองช่วงตัวอักษรที่เล็กเกินไปหรือไม่สมบูรณ์ 
+# ซึ่งอาจเป็น noise หรือรอยเล็กๆ ที่ไม่ใช่ตัวอักษรจริงๆ 
+# หากขนาดของช่วงตัวอักษรน้อยกว่า min_width จะไม่ถูกบันทึกไว้ใน segments ครับ
+
 # ฟังก์ชันดึงตัวอักษรจากภาพตามขอบเขตที่ได้
 def extract_characters(binary_image, segments):
     # แปลงภาพไบนารีเป็น Array ของ numpy
@@ -58,6 +63,9 @@ def extract_characters(binary_image, segments):
             char_img = char_img[rows]  # ตัดแถวที่ไม่มีพิกเซลสีดำออก
             characters.append(char_img) # เก็บภาพตัวอักษรใน list characters
     return characters
+# np.any(char_img == 0, axis=1) ใช้เพื่อตรวจสอบว่ามีพิกเซลสีดำในแถวนั้นหรือไม่
+#ถ้าไม่มีพิกเซลสีดำในแถวนั้นจะถือว่าเป็นช่องว่างและลบแถวนั้นออก
+
 
 # ฟังก์ชันเตรียม pattern ของตัวอักษรเป้าหมายจากไฟล์ภาพ
 def get_character_pattern(image_path, target_size=(40, 40)):
@@ -136,6 +144,7 @@ def load_character_patterns():
     return patterns
 
 # ฟังก์ชันรู้จำตัวอักษรในภาพโดยเทียบกับ pattern
+
 def recognize_characters(projection, segments, char_patterns):
     results = [] # list เพื่อเก็บผลลัพธ์การรู้จำ
     threshold = 0.5  # Threshold for matching
